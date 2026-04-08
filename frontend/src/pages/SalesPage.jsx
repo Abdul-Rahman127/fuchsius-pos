@@ -25,6 +25,7 @@ function formatMoney(n) {
 
 function SalesPage() {
   const [cartSkus, setCartSkus] = useState([])
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Cash')
 
   const cartItems = useMemo(
     () => PRODUCTS.filter((p) => cartSkus.includes(p.sku)),
@@ -161,8 +162,9 @@ function SalesPage() {
             <button
               key={label}
               type="button"
+              onClick={() => setSelectedPaymentMethod(label)}
               className={
-                label === 'Cash'
+                label === selectedPaymentMethod
                   ? 'rounded-xl border-2 border-blue-600 bg-blue-50 py-2.5 text-xs font-semibold text-blue-600'
                   : 'rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100'
               }
