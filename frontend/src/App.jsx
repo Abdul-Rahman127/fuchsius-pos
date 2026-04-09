@@ -5,6 +5,8 @@ import ProductDetails from './pages/ProductDetails';
 import ProductList from "./pages/ProductList";
 import { ThemeProvider } from './context/ThemeContext'; 
 import './App.css';
+import ManagerDashboard from "./ManagerDashboard";
+import GamingHero from "./GamingHero";
 
 function App() {
   return (
