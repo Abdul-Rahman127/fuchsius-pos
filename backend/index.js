@@ -143,6 +143,11 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
+
+// --- Customer Routes ---
+const customerRoutes = require('./routes/CustomerRoutes');
+app.use('/api/customers', customerRoutes);
+
 // Test Route
 app.get('/', (req, res) => {
   res.send('POS System Backend is Live with Full Products Support!');

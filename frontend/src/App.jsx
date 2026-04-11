@@ -1,30 +1,23 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Settings from './pages/Settings';
-import ProductDetails from './pages/ProductDetails';
-import ProductList from "./pages/ProductList";
-import { ThemeProvider } from './context/ThemeContext'; 
+import { ThemeProvider } from './context/ThemeContext';
+import Sidebar from './components/Sidebar';
 import './App.css';
+
+import Customers from './pages/Customer';
 
 function App() {
   return (
-    <ThemeProvider> 
+    <ThemeProvider>
       <Router>
-        <div className="app-container min-h-screen">
-          <Routes>
-            
-            <Route path="/" element={<Navigate to="/settings" />} />
-            
-          
-            <Route path="/settings" element={<Settings />} />
-            
-            {/* All Products List Route */}
-            <Route path="/product-list" element={<ProductList />} />
-
-            
-            <Route path="/product/:id" element={<ProductDetails />} />
-
-          </Routes>
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <div className="ml-64 flex-1">
+            <Routes>
+              <Route path="/" element={<Navigate to="/customers" />} />
+              <Route path="/customers" element={<Customers />} />
+            </Routes>
+          </div>
         </div>
       </Router>
     </ThemeProvider>
