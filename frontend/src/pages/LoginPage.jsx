@@ -4,6 +4,30 @@ import { useNavigate } from 'react-router-dom'
 function LoginPage() {
   const navigate = useNavigate()
   const [role, setRole] = useState('admin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setError('');
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/sales');
+      } else {
+        setError(data.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again later.');
+    }
+  };
   const heroImage =
     '/Users/halvitikankanamgegihan/.cursor/projects/Users-halvitikankanamgegihan-fuchsius-pos/assets/Body-d0fbf145-fe9b-4d28-b8e3-8523027b05d9.png'
 
@@ -64,11 +88,13 @@ function LoginPage() {
 
           <form
             className="mt-8 space-y-5"
-            onSubmit={(event) => {
-              event.preventDefault()
-              navigate('/sales')
-            }}
+            onSubmit={handleLogin}
           >
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+                {error}
+              </div>
+            )}
             <label className="block">
               <span className="mb-2 block text-[14px] font-medium text-[#353b54]">
                 Email address
@@ -79,6 +105,8 @@ function LoginPage() {
                   type="email"
                   className="w-full border-0 bg-transparent text-[15px] text-[#111827] outline-none placeholder:text-[#a8adbe]"
                   placeholder="e.g. curator@fuchsius.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -94,6 +122,8 @@ function LoginPage() {
                   type="password"
                   className="w-full border-0 bg-transparent text-[15px] text-[#111827] outline-none placeholder:text-[#a8adbe]"
                   placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <span className="text-sm text-[#8e92a7]">◉</span>

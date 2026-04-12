@@ -1,11 +1,4 @@
-import { useMemo, useState } from 'react'
-
-const PRODUCTS = [
-  { name: 'Wireless Earbuds', sku: 'SKU-0042', price: 29.99, stock: '48 left' },
-  { name: 'USB-C Cable 1m', sku: 'SKU-0017', price: 9.99, stock: '120 left' },
-  { name: 'Phone Stand', sku: 'SKU-0089', price: 14.99, stock: '15 left' },
-  { name: 'Screen Protector', sku: 'SKU-0031', price: 6.99, stock: '3 left'},
-]
+import { useMemo, useState, useEffect } from 'react'
 
 const TAX_RATE = 0.08
 const DISCOUNT_FIXED = 2
@@ -26,10 +19,26 @@ function formatMoney(n) {
 function SalesPage() {
   const [cartSkus, setCartSkus] = useState([])
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Cash')
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  useEffect(() => {
+    fetch('http://localhost:5001/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch products:", err);
+        setLoading(false);
+      });
+  }, [])
 
   const cartItems = useMemo(
-    () => PRODUCTS.filter((p) => cartSkus.includes(p.sku)),
-    [cartSkus],
+    () => products.filter((p) => cartSkus.includes(p.sku)),
+    [cartSkus, products],
   )
 
   const subtotal = useMemo(
@@ -40,6 +49,44 @@ function SalesPage() {
   const tax = subtotal * TAX_RATE
   const discount = cartItems.length > 0 ? DISCOUNT_FIXED : 0
   const total = Math.max(0, subtotal + tax - discount)
+
+  async function handleCompleteSale() {
+    setIsProcessing(true);
+    const salePayload = {
+      items: cartItems.map(item => ({
+        product_id: item._id,
+        sku: item.sku,
+        name: item.name,
+        price: item.price
+      })),
+      subtotal,
+      tax,
+      discount,
+      total,
+      paymentMethod: selectedPaymentMethod
+    };
+
+    try {
+      const response = await fetch('http://localhost:5001/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(salePayload)
+      });
+      if (response.ok) {
+        alert('Sale completed successfully!');
+        setCartSkus([]);
+        const data = await fetch('http://localhost:5001/api/products').then(res => res.json());
+        setProducts(data);
+      } else {
+        const errData = await response.json();
+        alert('Failed: ' + (errData.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error connecting to server.');
+    } finally {
+      setIsProcessing(false);
+    }
+  }
 
   function toggleCart(sku) {
     setCartSkus((prev) =>
@@ -70,30 +117,37 @@ function SalesPage() {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {PRODUCTS.map((product) => {
-            const selected = cartSkus.includes(product.sku)
-            return (
-              <button
-                key={product.sku}
-                type="button"
-                onClick={() => toggleCart(product.sku)}
-                className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition ${
-                  selected
-                    ? 'border-blue-600 ring-2 ring-blue-600/20'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-slate-900">{product.name}</h3>
-                  <span className="text-xs text-slate-500">{product.stock}</span>
-                </div>
+          {loading ? (
+            <p className="text-slate-500">Loading products...</p>
+          ) : products.length === 0 ? (
+            <p className="text-slate-500">No products available in database.</p>
+          ) : (
+            products.map((product) => {
+              const selected = cartSkus.includes(product.sku)
+              return (
+                <button
+                  key={product.sku}
+                  type="button"
+                  onClick={() => toggleCart(product.sku)}
+                  className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition ${
+                    selected
+                      ? 'border-blue-600 ring-2 ring-blue-600/20'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-slate-900">{product.name}</h3>
+                    <span className="text-xs text-slate-500">
+                      {typeof product.stock === 'number' ? `${product.stock} left` : product.stock}
+                    </span>
+                  </div>
                 <p className="mt-1 text-xs text-slate-500">{product.sku}</p>
                 <p className="mt-3 text-lg font-bold text-blue-600">
                   {formatMoney(product.price)}
                 </p>
               </button>
             )
-          })}
+          }))}
         </div>
       </section>
 
@@ -176,12 +230,17 @@ function SalesPage() {
 
         <button
           type="button"
-          disabled={cartItems.length === 0}
+          disabled={cartItems.length === 0 || isProcessing}
+          onClick={handleCompleteSale}
           className="mt-6 w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {cartItems.length === 0
-            ? 'Complete Sale'
-            : `Complete Sale — ${formatMoney(total)}`}
+          {isProcessing ? (
+            'Processing...'
+          ) : cartItems.length === 0 ? (
+            'Complete Sale'
+          ) : (
+            `Complete Sale — ${formatMoney(total)}`
+          )}
         </button>
       </aside>
     </div>
