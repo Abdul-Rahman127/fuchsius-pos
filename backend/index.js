@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const Settings = require('./models/Settings');
+const Product = require('./models/Product');
 
 const app = express();
 
@@ -22,29 +24,15 @@ mongoose.connect(uri, {
     console.error('❌ MongoDB Connection Error:', err.message);
   });
 
-// --- 1. Settings Schema & Model ---
-const SettingsSchema = new mongoose.Schema({
-  storeName: { type: String, default: "My POS System" },
-  currency: { type: String, default: "LKR" },
-  darkMode: { type: Boolean, default: false }
-});
-const Settings = mongoose.model('Settings', SettingsSchema);
-
-// --- 2. Product Schema & Model ---
-const ProductSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  sku: { type: String, required: true, unique: true },
-  category: { type: String, required: true },
-  price: { type: Number, required: true },
-  cost: { type: Number, required: true },
-  stock: { type: Number, required: true, default: 0 },
-  image: { type: String, default: "" } //
-}, { timestamps: true });
-
-const Product = mongoose.model('Product', ProductSchema);
+// Models are required at the top
 
 
 // --- Routes ---
+const authRoutes = require('./routes/auth');
+const salesRoutes = require('./routes/sales');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/sales', salesRoutes);
 
 // --- Settings Routes ---
 app.get('/api/settings', async (req, res) => {
