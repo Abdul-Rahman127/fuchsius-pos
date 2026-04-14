@@ -7,17 +7,17 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // ஈமெயில் ஏற்கனவே உள்ளதா எனச் சோதிக்க
+    
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists with this email" });
     }
 
-    // புதிய யூசரை உருவாக்குதல்
+    
     const newUser = new User({
       name,
       email,
-      password // குறிப்பு: நிஜ புராஜெக்ட்களில் பாஸ்வர்ட்டை encrypt செய்ய வேண்டும்
+      password 
     });
 
     await newUser.save();
