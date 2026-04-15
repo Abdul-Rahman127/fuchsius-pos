@@ -11,6 +11,11 @@ import Setting from './pages/Setting';
 import { ThemeProvider } from './context/ThemeContext'; 
 
 
+import './App.css';
+import ManagerDashboard from "./ManagerDashboard";
+import GamingHero from "./GamingHero";
+
+
 import Customers from './pages/Customer';
 
 function App() {
